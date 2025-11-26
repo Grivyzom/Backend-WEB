@@ -1,0 +1,76 @@
+# Archivos temporales
+AUTH_VIEWS_TEMP.py
+USER_MODEL_TEMP.py
+*_TEMP.py
+
+# Archivos de testing
+test_*.py
+*_test.py
+
+# Documentación temporal/placeholders
+README_PLACEHOLDERS.md
+GUIA_PLACEHOLDERS.md
+PLACEHOLDER_SETUP.txt
+
+# Media - Imágenes subidas por usuarios
+media/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.ico
+*.svg
+*.webp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+*.manifest
+*.spec
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+.venv/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+*.pot
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Migraciones (opcional - descomenta si no quieres subirlas)
+# */migrations/
+
+# Archivos de caché
+.cache/
+*.cache
