@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,17 +21,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#pqj90$w(0iv0wf$jq^56c75m)67tixv453y9ur6ibr@q7)l14'
+SECRET_KEY = config('SECRET_KEY')
+DOTENV_PATH = BASE_DIR / '.env'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+# Parse ALLOWED_HOSTS from comma-separated string
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+
+# Configuración de proxy reverso (nginx/Cloudflare)
+# Permite que Django use el host original del request
+USE_X_FORWARDED_HOST = True
+# Permite que Django detecte HTTPS a través del header de proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Configuración de CORS para permitir credenciales (sesiones)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
+    "http://138.68.51.86:4200",
+    "https://grivyzom.com",
+    "https://www.grivyzom.com",
+    "https://foro.grivyzom.com",
 ]
+
 
 CORS_ALLOW_CREDENTIALS = True  # IMPORTANTE: Permite enviar cookies de sesión
 CORS_ALLOW_HEADERS = [
@@ -45,15 +61,34 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:4200",
+# Métodos HTTP permitidos para CORS
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
-# Configuración de cookies de sesión para desarrollo con CORS
-SESSION_COOKIE_SAMESITE = None  # Cambiar de 'Lax' a None para desarrollo cross-origin
-SESSION_COOKIE_SECURE = False  # False para desarrollo (HTTP), True para producción (HTTPS)
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:4200",
+    "https://grivyzom.com",
+    "https://www.grivyzom.com",
+    "https://api.grivyzom.com",
+    "https://foro.grivyzom.com",
+]
+
+# Configuración de cookies de sesión para producción con CORS cross-origin
+SESSION_COOKIE_SAMESITE = 'None'  # None para permitir cross-origin (REQUIERE Secure=True)
+SESSION_COOKIE_SECURE = not DEBUG  # True en producción (HTTPS), False en desarrollo
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 86400  # 24 horas
+
+# Configuración de cookies CSRF para producción con CORS cross-origin
+CSRF_COOKIE_SAMESITE = 'None'  # None para permitir cross-origin
+CSRF_COOKIE_SECURE = not DEBUG  # True en producción (HTTPS), False en desarrollo
+CSRF_COOKIE_HTTPONLY = False  # False para que JavaScript pueda leerla
 
 
 
@@ -72,6 +107,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -108,22 +144,22 @@ WSGI_APPLICATION = 'backendGrivyzom.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'grivyzom_web', # La DB donde nLogin guarda datos
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost', # O la IP de tu servidor
-        'PORT': '3307',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
         'OPTIONS': {
             'init_command': "SET default_storage_engine=INNODB",
         }
     },
     'minecraft': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'nLogin', # La DB donde nLogin guarda datos
-        'USER': 'nLogin_grv',
-        'PASSWORD': 'mS^3PN8)9iv',
-        'HOST': '144.217.10.38', # O la IP de tu servidor
-        'PORT': '3306',
+        'NAME': config('MINECRAFT_DB_NAME'),
+        'USER': config('MINECRAFT_DB_USER'),
+        'PASSWORD': config('MINECRAFT_DB_PASSWORD'),
+        'HOST': config('MINECRAFT_DB_HOST'),
+        'PORT': config('MINECRAFT_DB_PORT'),
     }
 }
 
@@ -131,21 +167,7 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+# Configuración eliminada - ver línea 225 para la configuración completa con min_length
 
 
 # Internationalization
@@ -163,7 +185,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
@@ -207,3 +229,27 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Límite de intentos de login (recomendado usar django-ratelimit en producción)
 # Para desarrollo, las validaciones están en las vistas
+
+# ============================================================================
+# MINECRAFT PLUGIN INTEGRATION
+# ============================================================================
+# API Key para autenticar requests del plugin de Minecraft
+# IMPORTANTE: Esta key debe mantenerse secreta y solo conocida por el plugin
+MC_PLUGIN_API_KEY = config('MC_PLUGIN_API_KEY', default=None)
+
+# Tiempo de expiración de registros pendientes (en minutos)
+PENDING_REGISTRATION_EXPIRY_MINUTES = config('PENDING_REGISTRATION_EXPIRY_MINUTES', default=15, cast=int)
+
+# ============================================================================
+# EMAIL CONFIGURATION
+# ============================================================================
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@grivyzom.com')
+
+# Frontend URL for password reset links
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:4200')

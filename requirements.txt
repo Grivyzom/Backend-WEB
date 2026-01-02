@@ -2,6 +2,7 @@ Django==4.2.25
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 django-cors-headers==4.9.0
+django-ratelimit==4.1.0
 mysqlclient==2.2.7
 psycopg2-binary==2.9.10
 Pillow==11.3.0
@@ -10,3 +11,4 @@ python-decouple==3.8
 python-dotenv==1.1.1
 requests==2.32.5
 gunicorn==22.0.0
+whitenoise==6.11.0
