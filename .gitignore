@@ -14,13 +14,16 @@ PLACEHOLDER_SETUP.txt
 
 # Media - Imágenes subidas por usuarios
 media/
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.ico
-*.svg
-*.webp
+
+# Static files collected by Django (generated)
+/staticfiles/
+
+# Node modules (if using npm for frontend tools)
+/node_modules/
+package-lock.json
+
+# Documentation folder (if auto-generated)
+/docs/
 
 # Python
 __pycache__/
@@ -74,3 +77,6 @@ desktop.ini
 # Archivos de caché
 .cache/
 *.cache
+
+# Keep static images for server banners (don't ignore these)
+# !static/images/servers/
